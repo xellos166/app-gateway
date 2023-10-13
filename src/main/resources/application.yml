@@ -1,8 +1,18 @@
-debug: true
+#debug: true
 server:
   port: 9090
-
+#https://github.com/spring-cloud/spring-cloud-gateway/issues/2069
+#docker-compose up -d
+#burstcapacity is how much can be saved away incase you get more requests than replenish rate per second.
+#If you use the burst capacity and are constantly depleting the available requests per second, it won't get saved for later.
 spring:
+  main:
+    web-application-type: reactive
+  redis:
+    host: localhost
+    port: 6379
+  application:
+    name: app-gateway
   cloud:
     gateway:
       routes:
@@ -11,4 +21,8 @@ spring:
           predicates:
             - Path=/app-converter/**
           filters:
-            - AddRequestHeader=X-Request-red, blue
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 3
+                redis-rate-limiter.burstCapacity: 6
+                redis-rate-limiter.requestedTokens: 1
